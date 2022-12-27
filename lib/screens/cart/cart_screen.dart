@@ -1,0 +1,226 @@
+import 'dart:ui';
+
+import 'package:final_project/admin/models/product.dart';
+import 'package:final_project/admin/provider/provider_admin.dart';
+import 'package:final_project/ap_router/app_router.dart';
+import 'package:final_project/data/post_model.dart';
+import 'package:final_project/providers/auth_provider.dart';
+
+import 'package:final_project/screens/check_out/check_out_screen.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+
+class CartScreen extends StatelessWidget {
+  Product product;
+  CartScreen(this.product, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    AppUser appUser =
+        Provider.of<AuthProvider>(context, listen: false).loggedAppUser!;
+    Provider.of<ProviderAdmin>(context, listen: false)
+        .getAllCartProduct(appUser);
+    return Consumer<ProviderAdmin>(
+      builder: (context, provider, child) {
+        return Scaffold(
+          backgroundColor: const Color.fromARGB(244, 244, 244, 244),
+          appBar: AppBar(
+            elevation: 0.0,
+            toolbarHeight: 88.r,
+            title: const Text('Cart'),
+            centerTitle: true,
+            actions: [
+              Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Center(
+                      child: TextButton(
+                    onPressed: () {
+                      // provider.deleteModelSopping(product);
+                    },
+                    child: const Text(
+                      'Delete',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )))
+            ],
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                    colors: [
+                      Color.fromARGB(255, 52, 40, 62),
+                      Color.fromARGB(255, 132, 95, 161),
+                    ],
+                    begin: FractionalOffset(0.0, 0.0),
+                    end: FractionalOffset(1.0, 0.0),
+                    stops: [0.0, 1.0],
+                    tileMode: TileMode.clamp),
+              ),
+            ),
+          ),
+          body: ScreenUtilInit(
+            builder: (BuildContext context, Widget? child) {
+              return ListView.builder(
+                itemCount: provider.carts!.length,
+                itemBuilder: (context, index) {
+                  return provider.carts == null
+                      ? const Center(child: CircularProgressIndicator())
+                      : bulidList(provider.carts![index]);
+                },
+              );
+            },
+          ),
+          bottomSheet: Container(
+            color: const Color.fromARGB(244, 244, 244, 244),
+            child: Container(
+              width: 375.w,
+              height: 129.r,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30)),
+              ),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 15),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Total price',
+                          style: TextStyle(
+                              fontSize: 19, fontWeight: FontWeight.bold),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '\$ ${provider.sumTotalPrice()}',
+                          style: const TextStyle(
+                              fontSize: 19, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Container(
+                      width: 343.w,
+                      height: 48.h,
+                      child: ElevatedButton(
+                          onPressed: () {
+                            AppRouter.navigateAndReplace(
+                                CheckOutScreen(product));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.amber,
+                          ),
+                          child: const Text(
+                            'Check Out',
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.bold),
+                          )),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget bulidList(Product product) {
+    return Consumer<ProviderAdmin>(
+      builder: (context, provider, child) {
+        return provider.carts == null
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 375.w,
+                    height: 117.r,
+                    color: Colors.white,
+                    child: Row(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                          ),
+                          child: Image.network(
+                            product.imageUrl ?? '',
+                            width: 80.w,
+                            height: 80.h,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 13,
+                                ),
+                                width: 170.w,
+                                height: 57.h,
+                                child: Text(
+                                  product.description ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                  ),
+                                )),
+                            Text(
+                              '\$${product.price ?? ''}',
+                              style: const TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 5.r),
+                          child: Column(
+                            children: [
+                              IconButton(
+                                  onPressed: () {
+                                    provider.addNumCart(product);
+                                  },
+                                  icon: const Icon(
+                                      Icons.add_circle_outline_sharp)),
+                              Text('${product.number}'),
+                              IconButton(
+                                  onPressed: () {
+                                    provider.minsNumCart(product);
+                                  },
+                                  icon: const Icon(
+                                      Icons.remove_circle_outline_sharp)),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                            onPressed: () {
+                              AppUser appUser = Provider.of<AuthProvider>(
+                                      context,
+                                      listen: false)
+                                  .loggedAppUser!;
+                              //1
+                              provider.delelteCartProduct(appUser, product);
+                            },
+                            icon: Icon(
+                              Icons.delete_outline_outlined,
+                              size: 30.sp,
+                              color: Colors.red,
+                            ))
+                      ],
+                    ),
+                  ),
+                  const Divider()
+                ],
+              );
+      },
+    );
+  }
+}
